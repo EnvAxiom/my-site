@@ -5,38 +5,41 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>dilsher</title>
 
-<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;700;900&family=Space+Mono&display=swap" rel="stylesheet">
 
 <style>
-*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+*{margin:0;padding:0;box-sizing:border-box}
 
 :root{
   --g:#4cff82;
   --bg:#0a0a0a;
   --card:rgba(22,22,22,0.82);
   --text:#f0f0f0;
-  --muted:rgba(255,255,255,0.42);
+  --muted:rgba(255,255,255,0.45);
 }
 
-html,body{
-  width:100%;height:100%;
+body{
   font-family:'Nunito',sans-serif;
-  color:var(--text);
   background:var(--bg);
+  color:var(--text);
+  height:100vh;
   overflow:hidden;
 }
 
 /* BG */
 video.bg{
-  position:fixed;inset:0;
-  width:100%;height:100%;
+  position:fixed;
+  inset:0;
+  width:100%;
+  height:100%;
   object-fit:cover;
   filter:blur(18px) brightness(0.3);
 }
 
-/* PAGE */
+/* PAGE CENTER */
 .page{
-  position:fixed;inset:0;
+  position:fixed;
+  inset:0;
   display:flex;
   align-items:center;
   justify-content:center;
@@ -45,27 +48,22 @@ video.bg{
 
 /* CARD */
 .card{
-  width:100%;
-  max-width:420px;
   background:var(--card);
+  padding:28px 32px;
   border-radius:20px;
-  padding:25px;
   backdrop-filter:blur(30px);
+  text-align:center;
 }
 
-/* NAME */
 .name{
-  text-align:center;
-  font-size:30px;
+  font-size:32px;
   font-weight:900;
   color:var(--g);
 }
 
 .subtitle{
-  text-align:center;
   font-size:13px;
   color:var(--muted);
-  margin-bottom:20px;
 }
 
 /* PLAYER */
@@ -75,9 +73,9 @@ video.bg{
   left:50%;
   transform:translateX(-50%);
   width:calc(100% - 20px);
-  max-width:520px;
+  max-width:460px;
 
-  background:rgba(18,18,18,0.9);
+  background:rgba(18,18,18,0.95);
   border-radius:18px;
   padding:12px;
 
@@ -86,15 +84,16 @@ video.bg{
   gap:10px;
 }
 
-/* TOP ROW */
+/* TOP */
 .player-top{
   display:flex;
-  gap:10px;
   align-items:center;
+  gap:10px;
 }
 
-.album-art{
-  width:44px;height:44px;
+.album{
+  width:44px;
+  height:44px;
   border-radius:10px;
   background:#222;
   display:flex;
@@ -102,47 +101,40 @@ video.bg{
   justify-content:center;
 }
 
-.player-mid{
+.info{
   flex:1;
 }
 
-.song-title{
+.song{
   font-size:13px;
-  margin-bottom:5px;
+  margin-bottom:4px;
 }
 
 /* PROGRESS */
-.time-progress{
+.progress-wrap{
   display:flex;
   align-items:center;
   gap:6px;
-}
-
-.time-label{
-  font-size:10px;
+  font-size:11px;
   color:var(--muted);
 }
 
-/* RANGE */
 input[type=range]{
   flex:1;
-  height:3px;
 }
 
 /* BOTTOM */
 .player-bottom{
   display:flex;
-  align-items:center;
   justify-content:space-between;
+  align-items:center;
 }
 
-/* CONTROLS */
-.ctrl{
+button{
   background:none;
   border:none;
   color:white;
   font-size:18px;
-  margin:0 3px;
   cursor:pointer;
 }
 
@@ -150,9 +142,8 @@ input[type=range]{
   width:90px;
 }
 
-/* MOBILE */
-@media (max-width:480px){
-  .volume{width:70px;}
+@media(max-width:480px){
+  .volume{width:65px;}
 }
 </style>
 </head>
@@ -174,24 +165,24 @@ input[type=range]{
 <div class="player">
 
   <div class="player-top">
-    <div class="album-art">🎵</div>
+    <div class="album">🎵</div>
 
-    <div class="player-mid">
-      <div class="song-title" id="songTitle">Loading…</div>
+    <div class="info">
+      <div class="song" id="songTitle">Loading…</div>
 
-      <div class="time-progress">
-        <span class="time-label" id="curTime">0:00</span>
+      <div class="progress-wrap">
+        <span id="curTime">0:00</span>
         <input type="range" id="progressBar" value="0">
-        <span class="time-label" id="durTime">0:00</span>
+        <span id="durTime">0:00</span>
       </div>
     </div>
   </div>
 
   <div class="player-bottom">
     <div>
-      <button class="ctrl" onclick="prevSong()">⏮</button>
-      <button class="ctrl" id="playBtn" onclick="playPause()">▶</button>
-      <button class="ctrl" onclick="nextSong()">⏭</button>
+      <button onclick="prevSong()">⏮</button>
+      <button onclick="playPause()" id="playBtn">▶</button>
+      <button onclick="nextSong()">⏭</button>
     </div>
 
     <input type="range" id="volumeBar" class="volume" min="0" max="1" step="0.01">
@@ -201,83 +192,85 @@ input[type=range]{
 </div>
 
 <script>
-const audio = document.getElementById('audio');
-const prog = document.getElementById('progressBar');
-const playBtn = document.getElementById('playBtn');
-const volumeBar = document.getElementById('volumeBar');
+const audio=document.getElementById('audio');
+const progress=document.getElementById('progressBar');
+const playBtn=document.getElementById('playBtn');
+const volume=document.getElementById('volumeBar');
 
-const songs = [
-  { file:"I Don't Like (Remix).mp3", label:"I Don't Like (Remix)" },
-  { file:"Roddy Ricch - The Box.mp3", label:"Roddy Ricch — The Box" },
-  { file:"Cartoon, Jéja - On & On.mp3", label:"Cartoon & Jéja — On & On" }
+const songs=[
+ {file:"I Don't Like (Remix).mp3",label:"I Don't Like (Remix)"},
+ {file:"Roddy Ricch - The Box.mp3",label:"Roddy Ricch — The Box"},
+ {file:"Cartoon, Jéja - On & On.mp3",label:"Cartoon & Jéja — On & On"},
+ {file:"Ey Reqîb.mp3",label:"Ey Reqîb"}
 ];
 
-let idx = 0;
+let i=0;
 
 function fmt(t){
-  let m=Math.floor(t/60),s=Math.floor(t%60);
-  return m+':'+(s<10?'0':'')+s;
+ let m=Math.floor(t/60),s=Math.floor(t%60);
+ return m+':'+(s<10?'0':'')+s;
 }
 
-function loadSong(){
-  const s=songs[idx];
-  audio.src=encodeURI(s.file);
-  document.getElementById('songTitle').textContent=s.label;
+function load(){
+ audio.src=encodeURI(songs[i].file);
+ document.getElementById('songTitle').textContent=songs[i].label;
 }
+load();
 
 function playPause(){
-  if(audio.paused){
-    audio.play();
-    playBtn.textContent='⏸';
-  }else{
-    audio.pause();
-    playBtn.textContent='▶';
-  }
+ if(audio.paused){
+  audio.play().catch(()=>{});
+  playBtn.textContent="⏸";
+ }else{
+  audio.pause();
+  playBtn.textContent="▶";
+ }
 }
 
 function nextSong(){
-  idx=(idx+1)%songs.length;
-  loadSong();
-  audio.play();
-  playBtn.textContent='⏸';
+ i=(i+1)%songs.length;
+ load();
+ audio.play().catch(()=>{});
+ playBtn.textContent="⏸";
 }
 
 function prevSong(){
-  idx=(idx-1+songs.length)%songs.length;
-  loadSong();
-  audio.play();
-  playBtn.textContent='⏸';
+ i=(i-1+songs.length)%songs.length;
+ load();
+ audio.play().catch(()=>{});
+ playBtn.textContent="⏸";
 }
 
+/* FIXED TIME */
+audio.addEventListener('loadedmetadata',()=>{
+ document.getElementById('durTime').textContent=fmt(audio.duration||0);
+});
+
 audio.ontimeupdate=()=>{
-  document.getElementById('curTime').textContent=fmt(audio.currentTime);
-  if(audio.duration){
-    prog.value=(audio.currentTime/audio.duration)*100;
-    document.getElementById('durTime').textContent=fmt(audio.duration);
-  }
+ document.getElementById('curTime').textContent=fmt(audio.currentTime||0);
+ if(audio.duration){
+  progress.value=(audio.currentTime/audio.duration)*100;
+ }
 };
 
-prog.oninput=()=>{
-  if(audio.duration){
-    audio.currentTime=(prog.value/100)*audio.duration;
-  }
+progress.oninput=()=>{
+ if(audio.duration){
+  audio.currentTime=(progress.value/100)*audio.duration;
+ }
 };
+
+audio.onended=nextSong;
 
 /* VOLUME */
 audio.volume=0.7;
-volumeBar.value=0.7;
+volume.value=0.7;
+volume.oninput=()=>audio.volume=volume.value;
 
-volumeBar.oninput=()=>{
-  audio.volume=volumeBar.value;
-};
-
-/* autoplay on first tap (mobile fix) */
+/* MOBILE FIX */
 document.body.addEventListener('click',()=>{
-  audio.play().catch(()=>{});
-  playBtn.textContent='⏸';
+ audio.play().catch(()=>{});
+ playBtn.textContent="⏸";
 },{once:true});
-
-loadSong();
 </script>
 
 </body>
