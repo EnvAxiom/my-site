@@ -5,7 +5,7 @@
    ===================== */
 var bgVideoFiles = [
   'Everyday.mp4',
-  'Chief Keef - Love Sosa.mp4'
+  'Sosa.mp4'
 ];
 var currentBgIdx = Math.floor(Math.random() * bgVideoFiles.length);
 var bgVideo      = document.getElementById('bgVideo');
