@@ -11,14 +11,14 @@
 /* =====================
    SPOTIFY-STYLE LYRICS PANEL
    ===================== */
-.lyrics-panel {
+ .lyrics-panel {
   position: fixed;
-  right: 7vw;
+  right: 6vw;
   top: 50%;
   transform: translateY(-50%);
-  width: min(380px, 32vw);
-  max-height: 68vh;
-  padding: 22px 20px;
+  width: min(430px, 36vw);
+  max-height: 72vh;
+  padding: 24px 28px;
   border-radius: 22px;
   background: rgba(38, 38, 41, 0.76);
   border: 1px solid rgba(255,255,255,0.10);
@@ -59,14 +59,17 @@
 }
 
 .lyric-line {
-  font-size: 18px;
-  line-height: 1.25;
+  font-size: 17px;
+  line-height: 1.28;
   font-weight: 700;
   color: rgba(240, 237, 232, 0.30);
   text-align: center;
-  transform: scale(0.96);
+  transform: scale(0.98);
   transition: color 0.25s ease, opacity 0.25s ease, transform 0.25s ease, filter 0.25s ease;
   opacity: 0.55;
+  max-width: 100%;
+  overflow-wrap: anywhere;
+  word-break: normal;
 }
 
 .lyric-line.past {
@@ -76,8 +79,8 @@
 .lyric-line.active {
   color: #ffffff;
   opacity: 1;
-  transform: scale(1.08);
-  filter: drop-shadow(0 0 12px rgba(255,255,255,0.22));
+  transform: scale(1.02);
+  filter: drop-shadow(0 0 10px rgba(255,255,255,0.20));
 }
 
 .lyric-line.next {
@@ -123,7 +126,7 @@
 </div>
 
 <!-- BACKGROUND VIDEO -->
-<video id="bgVideo" muted loop playsinline></video>
+<video id="bgVideo" autoplay muted loop playsinline webkit-playsinline></video>
 <div class="bg-overlay"></div>
 
 <div class="scene" id="mainScene">
@@ -222,6 +225,6 @@
     </aside>
 </div>
 
-<script src="script.js?v=lyrics-final-3"></script>
+<script src="script.js?v=video-lyrics-final-5"></script>
 </body>
 </html>
