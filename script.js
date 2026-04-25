@@ -256,6 +256,7 @@ var lyricsFiles = {
   "I Don't Like (Remix)": "dont-like-remix.lrc",
   "Roddy Ricch - The Box": "thebox.lrc",
   "Cartoon & Jéja - On & On": "onandon.lrc",
+  "Mama war der Mann im Haus": "imhaus.lrc",
   "Chief Keef - Love Sosa": "lovesosa.lrc"
 };
 
