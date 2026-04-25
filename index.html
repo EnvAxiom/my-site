@@ -6,6 +6,12 @@
 <title>dilsher</title>
 <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet"/>
 <link rel="stylesheet" href="style.css"/>
+<style>
+#bgVideo { z-index: 0 !important; background: #0e0e0e; }
+.bg-overlay { z-index: 1 !important; }
+.scene { z-index: 2 !important; }
+.splash { z-index: 999 !important; }
+</style>
 </head>
 <body>
 
@@ -18,7 +24,7 @@
 </div>
 
 <!-- BACKGROUND VIDEO -->
-<video id="bgVideo" muted loop playsinline></video>
+<video id="bgVideo" muted loop playsinline preload="auto"></video>
 <div class="bg-overlay"></div>
 
 <div class="scene" id="mainScene">
