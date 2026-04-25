@@ -49,45 +49,32 @@ html, body {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 10px;
+  gap: 6px;
   user-select: none;
 }
 
-@keyframes rgb-splash {
-  0%   { color: #ff4444; }
-  14%  { color: #ff8800; }
-  28%  { color: #ffee00; }
-  42%  { color: #44ff44; }
-  57%  { color: #00ccff; }
-  71%  { color: #8844ff; }
-  85%  { color: #ff44cc; }
-  100% { color: #ff4444; }
-}
-
+/* "dilsher" — small, white, plain */
 .splash-name {
   font-family: 'Syne', sans-serif;
+  font-weight: 600;
+  font-size: 13px;
+  letter-spacing: 3px;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.55);
+}
+
+/* "CLICK TO ENTER" — big bold */
+.splash-click {
+  font-family: 'Syne', sans-serif;
   font-weight: 800;
-  font-size: 72px;
+  font-size: 68px;
   letter-spacing: -2px;
-  animation: rgb-splash 3s linear infinite;
+  color: #ffffff;
   line-height: 1;
 }
 
-@keyframes pulse-click {
-  0%, 100% { opacity: 0.5; }
-  50%       { opacity: 1; }
-}
-
-.splash-click {
-  font-size: 13px;
-  letter-spacing: 0.5px;
-  color: rgba(255, 255, 255, 0.45);
-  animation: pulse-click 2s ease-in-out infinite;
-  margin-top: 4px;
-}
-
 /* =====================
-   MAIN SCENE (hidden until enter)
+   MAIN SCENE
    ===================== */
 .scene {
   position: relative;
@@ -146,7 +133,6 @@ html, body {
   object-fit: cover;
 }
 
-/* RGB RAINBOW NAME */
 @keyframes rgb {
   0%   { color: #ff4444; }
   14%  { color: #ff8800; }
@@ -346,7 +332,6 @@ html, body {
   margin-top: 1px;
 }
 
-/* Progress bar */
 .progress-row {
   display: flex;
   align-items: center;
@@ -386,7 +371,6 @@ input[type=range]::-webkit-slider-thumb {
   background: linear-gradient(to right, #fff var(--vol, 70%), rgba(255,255,255,0.16) var(--vol, 70%));
 }
 
-/* Controls */
 .controls {
   display: flex;
   align-items: center;
@@ -420,7 +404,6 @@ input[type=range]::-webkit-slider-thumb {
 .ctrl-btn.play svg { width: 14px; height: 14px; }
 .ctrl-btn.play:hover { background: #eee; transform: scale(1.08); }
 
-/* Volume */
 .volume-row {
   display: flex;
   align-items: center;
