@@ -4,7 +4,7 @@
    The browser loads the raw bytes and plays from a local blob URL.
    ===================== */
 var bgVideoFiles = [
-  'Chief Keef - _Everyday_.mp4',
+  'Everyday.mp4',
   'Chief Keef - Love Sosa.mp4'
 ];
 var currentBgIdx = Math.floor(Math.random() * bgVideoFiles.length);
