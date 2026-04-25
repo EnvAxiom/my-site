@@ -53,31 +53,25 @@ fetch('https://api.lanyard.rest/v1/users/' + DISCORD_ID)
 })();
 
 /* =====================
-   MUSIC PLAYER
+   MUSIC PLAYER (mp3s only)
    ===================== */
 var songs = [
   { file: "I Don't Like (Remix).mp3",         label: "I Don't Like (Remix)"          },
   { file: "Roddy Ricch - The Box.mp3",         label: "Roddy Ricch - The Box"         },
   { file: "Cartoon, J\u00e9ja - On & On.mp3", label: "Cartoon & J\u00e9ja - On & On" },
   { file: "Ey Reqib.mp3",                      label: "Ey Reqib"                      },
-  { file: "Chief Keef - Love Sosa.mp3",        label: "Chief Keef - Love Sosa"        },
-  { file: "Chief Keef - _Everyday_.mp4",       label: "Chief Keef - Everyday"         }
+  { file: "Chief Keef - Love Sosa.mp3",        label: "Chief Keef - Love Sosa"        }
+  /* Chief Keef - Everyday is a VIDEO — handled separately below */
 ];
 
 var idx        = 0;
+var audioEl    = document.getElementById('audio');
 var progress   = document.getElementById('progressBar');
 var playPath   = document.getElementById('playPath');
 var volBar     = document.getElementById('volumeBar');
 var PLAY       = "M8 5v14l11-7z";
 var PAUSE      = "M6 19h4V5H6v14zm8-14v14h4V5h-4z";
 var currentVol = 0.7;
-
-/* Both elements are declared in index.html */
-var audioEl = document.getElementById('audio');
-var videoEl = document.getElementById('video');
-
-function isMP4() { return songs[idx].file.slice(-4).toLowerCase() === '.mp4'; }
-function activeEl() { return isMP4() ? videoEl : audioEl; }
 
 function fmt(t) {
   if (!t || isNaN(t)) return '0:00';
@@ -87,95 +81,70 @@ function fmt(t) {
 function setProgress(v) { progress.style.setProperty('--prog', v + '%'); }
 function setVolume(v)   { volBar.style.setProperty('--vol', (v * 100) + '%'); }
 
-function resetDisplay() {
+function loadSong(autoplay) {
+  audioEl.pause();
+  audioEl.src = songs[idx].file;
+  audioEl.load();
+  document.getElementById('songTitle').textContent = songs[idx].label;
   document.getElementById('curTime').textContent  = '0:00';
   document.getElementById('curTime2').textContent = '0:00';
   document.getElementById('durTime').textContent  = '0:00';
   document.getElementById('durTime2').textContent = '0:00';
   progress.value = 0;
   setProgress(0);
-}
-
-function stopAll() {
-  audioEl.pause();
-  audioEl.removeAttribute('src');
-  audioEl.load();
-  videoEl.pause();
-  videoEl.removeAttribute('src');
-  videoEl.load();
-  resetDisplay();
-}
-
-function loadSong(autoplay) {
-  stopAll();
-  var song = songs[idx];
-  document.getElementById('songTitle').textContent = song.label;
-  var el = activeEl();
-  el.volume = currentVol;
-  el.src = song.file;
-  el.load();
   if (autoplay) {
-    setTimeout(function() {
-      el.play().catch(function(err) { console.warn('play blocked:', err); });
-    }, 80);
+    audioEl.play().catch(function() {});
     playPath.setAttribute('d', PAUSE);
   } else {
     playPath.setAttribute('d', PLAY);
   }
 }
 
-[audioEl, videoEl].forEach(function(el) {
-  el.addEventListener('loadedmetadata', function() {
-    if (el !== activeEl()) return;
-    var d = fmt(el.duration);
-    document.getElementById('durTime').textContent  = d;
-    document.getElementById('durTime2').textContent = d;
-  });
+audioEl.addEventListener('loadedmetadata', function() {
+  var d = fmt(audioEl.duration);
+  document.getElementById('durTime').textContent  = d;
+  document.getElementById('durTime2').textContent = d;
+});
 
-  el.addEventListener('timeupdate', function() {
-    if (el !== activeEl()) return;
-    var c = fmt(el.currentTime);
-    document.getElementById('curTime').textContent  = c;
-    document.getElementById('curTime2').textContent = c;
-    if (el.duration) {
-      var p = (el.currentTime / el.duration) * 100;
-      progress.value = p;
-      setProgress(p);
-    }
-  });
+audioEl.addEventListener('timeupdate', function() {
+  var c = fmt(audioEl.currentTime);
+  document.getElementById('curTime').textContent  = c;
+  document.getElementById('curTime2').textContent = c;
+  if (audioEl.duration) {
+    var p = (audioEl.currentTime / audioEl.duration) * 100;
+    progress.value = p;
+    setProgress(p);
+  }
+});
 
-  el.addEventListener('ended', nextSong);
+audioEl.addEventListener('ended', function() {
+  idx = (idx + 1) % songs.length;
+  loadSong(true);
 });
 
 function playPause() {
-  var el = activeEl();
-  if (el.paused) {
-    el.play().catch(function() {});
+  if (audioEl.paused) {
+    audioEl.play().catch(function() {});
     playPath.setAttribute('d', PAUSE);
   } else {
-    el.pause();
+    audioEl.pause();
     playPath.setAttribute('d', PLAY);
   }
 }
 
-function nextSong() {
+document.getElementById('playBtn').addEventListener('click', playPause);
+document.getElementById('nextBtn').addEventListener('click', function() {
   idx = (idx + 1) % songs.length;
   loadSong(true);
-}
-
-function prevSong() {
+});
+document.getElementById('prevBtn').addEventListener('click', function() {
   idx = (idx - 1 + songs.length) % songs.length;
   loadSong(true);
-}
-
-document.getElementById('playBtn').addEventListener('click', playPause);
-document.getElementById('nextBtn').addEventListener('click', nextSong);
-document.getElementById('prevBtn').addEventListener('click', prevSong);
+});
 
 progress.oninput = function() {
-  var el = activeEl();
-  if (el.duration) {
-    el.currentTime = (progress.value / 100) * el.duration;
+  if (audioEl.duration) {
+    audioEl.currentTime = (progress.value / 100) * audioEl.duration;
     setProgress(progress.value);
   }
 };
@@ -183,19 +152,38 @@ progress.oninput = function() {
 volBar.oninput = function() {
   currentVol = parseFloat(volBar.value);
   audioEl.volume = currentVol;
-  videoEl.volume = currentVol;
   setVolume(currentVol);
 };
 
 audioEl.volume = currentVol;
-videoEl.volume = currentVol;
 setVolume(currentVol);
 loadSong(false);
 
-document.body.addEventListener('click', function() {
-  var el = activeEl();
-  if (el.paused) {
-    el.play().catch(function() {});
-    playPath.setAttribute('d', PAUSE);
-  }
-}, { once: true });
+/* =====================
+   VIDEO PLAYER (mp4)
+   ===================== */
+var musicPlayer = document.getElementById('musicPlayer');
+var videoPlayer = document.getElementById('videoPlayer');
+var videoEl     = document.getElementById('videoEl');
+
+document.getElementById('toVideoBtn').addEventListener('click', function() {
+  /* pause music */
+  audioEl.pause();
+  playPath.setAttribute('d', PLAY);
+  /* load and show the video */
+  videoEl.src = "Chief Keef - _Everyday_.mp4";
+  videoEl.volume = currentVol;
+  /* swap panels */
+  musicPlayer.style.display = 'none';
+  videoPlayer.style.display = 'block';
+  videoEl.play().catch(function() {});
+});
+
+document.getElementById('toMusicBtn').addEventListener('click', function() {
+  /* stop the video */
+  videoEl.pause();
+  videoEl.src = '';
+  /* swap back */
+  videoPlayer.style.display = 'none';
+  musicPlayer.style.display = 'block';
+});
