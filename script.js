@@ -53,6 +53,34 @@ fetch('https://api.lanyard.rest/v1/users/' + DISCORD_ID)
 })();
 
 /* =====================
+   BACKGROUND VIDEO
+   ===================== */
+var bgVideos = [
+  'Chief Keef - _Everyday_.mp4',
+  'Chief Keef - Love Sosa.mp4'
+];
+var currentBgIdx = 0;
+var bgVideo = document.getElementById('bgVideo');
+
+function loadBgVideo(idx) {
+  bgVideo.src = bgVideos[idx];
+  bgVideo.load();
+  bgVideo.play().catch(function() {});
+}
+
+/* pick a random one on load */
+currentBgIdx = Math.floor(Math.random() * bgVideos.length);
+loadBgVideo(currentBgIdx);
+
+document.getElementById('changeVidBtn').addEventListener('click', function() {
+  /* pick a different random video (never the same one) */
+  var next;
+  do { next = Math.floor(Math.random() * bgVideos.length); } while (next === currentBgIdx && bgVideos.length > 1);
+  currentBgIdx = next;
+  loadBgVideo(currentBgIdx);
+});
+
+/* =====================
    MUSIC PLAYER (mp3s only)
    ===================== */
 var songs = [
@@ -61,7 +89,6 @@ var songs = [
   { file: "Cartoon, J\u00e9ja - On & On.mp3", label: "Cartoon & J\u00e9ja - On & On" },
   { file: "Ey Reqib.mp3",                      label: "Ey Reqib"                      },
   { file: "Chief Keef - Love Sosa.mp3",        label: "Chief Keef - Love Sosa"        }
-  /* Chief Keef - Everyday is a VIDEO — handled separately below */
 ];
 
 var idx        = 0;
@@ -86,10 +113,10 @@ function loadSong(autoplay) {
   audioEl.src = songs[idx].file;
   audioEl.load();
   document.getElementById('songTitle').textContent = songs[idx].label;
-  document.getElementById('curTime').textContent  = '0:00';
-  document.getElementById('curTime2').textContent = '0:00';
-  document.getElementById('durTime').textContent  = '0:00';
-  document.getElementById('durTime2').textContent = '0:00';
+  document.getElementById('curTime').textContent   = '0:00';
+  document.getElementById('curTime2').textContent  = '0:00';
+  document.getElementById('durTime').textContent   = '0:00';
+  document.getElementById('durTime2').textContent  = '0:00';
   progress.value = 0;
   setProgress(0);
   if (autoplay) {
@@ -159,31 +186,9 @@ audioEl.volume = currentVol;
 setVolume(currentVol);
 loadSong(false);
 
-/* =====================
-   VIDEO PLAYER (mp4)
-   ===================== */
-var musicPlayer = document.getElementById('musicPlayer');
-var videoPlayer = document.getElementById('videoPlayer');
-var videoEl     = document.getElementById('videoEl');
-
-document.getElementById('toVideoBtn').addEventListener('click', function() {
-  /* pause music */
-  audioEl.pause();
-  playPath.setAttribute('d', PLAY);
-  /* load and show the video */
-  videoEl.src = "Chief Keef - _Everyday_.mp4";
-  videoEl.volume = currentVol;
-  /* swap panels */
-  musicPlayer.style.display = 'none';
-  videoPlayer.style.display = 'block';
-  videoEl.play().catch(function() {});
-});
-
-document.getElementById('toMusicBtn').addEventListener('click', function() {
-  /* stop the video */
-  videoEl.pause();
-  videoEl.src = '';
-  /* swap back */
-  videoPlayer.style.display = 'none';
-  musicPlayer.style.display = 'block';
-});
+document.body.addEventListener('click', function() {
+  if (audioEl.paused) {
+    audioEl.play().catch(function() {});
+    playPath.setAttribute('d', PAUSE);
+  }
+}, { once: true });
