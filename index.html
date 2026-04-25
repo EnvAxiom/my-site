@@ -6,12 +6,121 @@
 <title>dilsher</title>
 <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet"/>
 <link rel="stylesheet" href="style.css"/>
+
 <style>
-#bgVideo { z-index: 0 !important; background: #0e0e0e; }
-.bg-overlay { z-index: 1 !important; }
-.scene { z-index: 2 !important; }
-.splash { z-index: 999 !important; }
+/* =====================
+   SPOTIFY-STYLE LYRICS PANEL
+   ===================== */
+.lyrics-panel {
+  position: fixed;
+  right: 8vw;
+  top: 50%;
+  transform: translateY(-50%);
+  width: min(360px, 30vw);
+  max-height: 68vh;
+  padding: 22px 20px;
+  border-radius: 22px;
+  background: rgba(38, 38, 41, 0.72);
+  border: 1px solid rgba(255,255,255,0.10);
+  backdrop-filter: blur(22px) saturate(1.25);
+  -webkit-backdrop-filter: blur(22px) saturate(1.25);
+  box-shadow: 0 12px 55px rgba(0,0,0,0.55), inset 0 1px 0 rgba(255,255,255,0.06);
+  z-index: 3;
+  color: var(--text);
+  overflow: hidden;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.45s ease, transform 0.45s ease;
+}
+
+.scene.visible .lyrics-panel {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.lyrics-heading {
+  font-family: 'Syne', sans-serif;
+  font-weight: 800;
+  font-size: 13px;
+  letter-spacing: 2.5px;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin-bottom: 16px;
+  text-align: center;
+}
+
+.lyrics-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  max-height: 55vh;
+  overflow: hidden;
+  justify-content: center;
+}
+
+.lyric-line {
+  font-size: 18px;
+  line-height: 1.25;
+  font-weight: 700;
+  color: rgba(240, 237, 232, 0.30);
+  text-align: center;
+  transform: scale(0.96);
+  transition: color 0.25s ease, opacity 0.25s ease, transform 0.25s ease, filter 0.25s ease;
+  opacity: 0.55;
+}
+
+.lyric-line.past {
+  opacity: 0.25;
+}
+
+.lyric-line.active {
+  color: #ffffff;
+  opacity: 1;
+  transform: scale(1.08);
+  filter: drop-shadow(0 0 12px rgba(255,255,255,0.22));
+}
+
+.lyric-line.next {
+  opacity: 0.65;
+}
+
+.lyrics-empty {
+  color: var(--muted);
+  font-size: 13px;
+  text-align: center;
+}
+
+@media (max-width: 980px) {
+  html, body {
+    overflow-y: auto;
+  }
+
+  .scene {
+    min-height: 100vh;
+    height: auto;
+    padding: 22px 0;
+    flex-direction: column;
+    gap: 14px;
+  }
+
+  .lyrics-panel {
+    position: static;
+    transform: none;
+    width: min(90vw, 360px);
+    max-height: 230px;
+    margin-top: 14px;
+  }
+
+  .scene.visible .lyrics-panel {
+    transform: none;
+  }
+
+  .lyric-line {
+    font-size: 15px;
+  }
+}
 </style>
+
 </head>
 <body>
 
@@ -24,7 +133,7 @@
 </div>
 
 <!-- BACKGROUND VIDEO -->
-<video id="bgVideo" muted loop playsinline preload="auto"></video>
+<video id="bgVideo" muted loop playsinline></video>
 <div class="bg-overlay"></div>
 
 <div class="scene" id="mainScene">
@@ -114,6 +223,14 @@
     </div>
 
   </div>
+
+    <aside class="lyrics-panel" id="lyricsPanel" aria-label="Lyrics">
+      <div class="lyrics-heading">lyrics</div>
+      <div class="lyrics-list" id="lyricsList">
+        <div class="lyrics-empty">Lyrics load when the song starts</div>
+      </div>
+    </aside>
+
 </div>
 
 <script src="script.js"></script>
