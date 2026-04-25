@@ -1,35 +1,44 @@
 /* =====================
-   VIDEO FILES
+   VIDEO FILES - FINAL FIX
    ===================== */
 var bgVideoFiles = [
-  'Chief Keef - _Everyday_.mp4',
-  'Sosa.mp4'
+  "Chief Keef - _Everyday_.mp4",
+  "Sosa.mp4"
 ];
 
 var currentBgIdx = Math.floor(Math.random() * bgVideoFiles.length);
-var bgVideo      = document.getElementById('bgVideo');
-var audioEl      = document.getElementById('audio');
+var bgVideo      = document.getElementById("bgVideo");
+var audioEl      = document.getElementById("audio");
 var entered      = false;
 
 function playBgVideo(filename) {
   if (!bgVideo) return;
 
   bgVideo.pause();
-  bgVideo.removeAttribute('src');
-  bgVideo.load();
+  bgVideo.removeAttribute("src");
 
-  bgVideo.src = encodeURI(filename);
+  var source = document.createElement("source");
+  source.src = encodeURI(filename);
+  source.type = "video/mp4";
+
+  bgVideo.innerHTML = "";
+  bgVideo.appendChild(source);
+
   bgVideo.muted = true;
   bgVideo.loop = true;
   bgVideo.playsInline = true;
-  bgVideo.setAttribute('playsinline', '');
-  bgVideo.setAttribute('webkit-playsinline', '');
+  bgVideo.setAttribute("playsinline", "");
+  bgVideo.setAttribute("webkit-playsinline", "");
+  bgVideo.autoplay = true;
 
   bgVideo.load();
 
-  bgVideo.play().catch(function(e) {
-    console.warn('Background video play error:', e);
-  });
+  var p = bgVideo.play();
+  if (p && p.catch) {
+    p.catch(function(e) {
+      console.warn("Background video play failed:", filename, e);
+    });
+  }
 }
 
 /* =====================
@@ -50,7 +59,8 @@ splash.addEventListener('click', function() {
 });
 
 /* Change video button */
-document.getElementById('changeVidBtn').addEventListener('click', function() {
+var changeVidBtn = document.getElementById('changeVidBtn');
+if (changeVidBtn) changeVidBtn.addEventListener('click', function() {
   var next;
   do { next = Math.floor(Math.random() * bgVideoFiles.length); }
   while (next === currentBgIdx && bgVideoFiles.length > 1);
@@ -242,7 +252,10 @@ var currentLyrics = [];
 var currentLyricsSong = "";
 
 var lyricsFiles = {
-  "I Don't Like (Remix)": "dont-like-remix.lrc"
+  "I Don't Like (Remix)": "dont-like-remix.lrc",
+  "Roddy Ricch - The Box": "thebox.lrc",
+  "Cartoon & Jéja - On & On": "onandon.lrc",
+  "Chief Keef - Love Sosa": "lovesosa.lrc"
 };
 
 function htmlSafe(text) {
@@ -328,7 +341,7 @@ function loadLyricsForSong(songLabel) {
     })
     .catch(function(error) {
       console.warn("Lyrics failed:", error);
-      setLyricsMessage("LYRICS FILE NOT LOADED");
+      setLyricsMessage("NO LYRICS");
     });
 }
 
