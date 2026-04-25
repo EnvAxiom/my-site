@@ -1,4 +1,62 @@
 /* =====================
+   SPLASH SCREEN — enters on click,
+   which also unlocks browser autoplay
+   ===================== */
+var splash     = document.getElementById('splash');
+var mainScene  = document.getElementById('mainScene');
+var bgVideo    = document.getElementById('bgVideo');
+var audioEl    = document.getElementById('audio');
+var entered    = false;
+
+/* Pre-load the video src so it's ready */
+var bgVideos = [
+  'Chief Keef - _Everyday_.mp4',
+  'Chief Keef - Love Sosa.mp4'
+];
+var currentBgIdx = Math.floor(Math.random() * bgVideos.length);
+
+function encodeSrc(filename) {
+  return filename.split(' ').join('%20');
+}
+
+/* Set src immediately so it starts buffering */
+bgVideo.src = encodeSrc(bgVideos[currentBgIdx]);
+bgVideo.load();
+
+splash.addEventListener('click', function() {
+  if (entered) return;
+  entered = true;
+
+  /* Fade out splash */
+  splash.classList.add('hidden');
+
+  /* Play video — this is inside a user gesture so it WILL work */
+  bgVideo.play().catch(function(e) { console.warn('video play failed:', e); });
+
+  /* Start music */
+  loadSong(false);
+  audioEl.play().catch(function() {});
+  playPath.setAttribute('d', PAUSE);
+
+  /* Fade in main content */
+  mainScene.classList.add('visible');
+});
+
+/* =====================
+   CHANGE VIDEO BUTTON
+   ===================== */
+document.getElementById('changeVidBtn').addEventListener('click', function() {
+  var next;
+  do {
+    next = Math.floor(Math.random() * bgVideos.length);
+  } while (next === currentBgIdx && bgVideos.length > 1);
+  currentBgIdx = next;
+  bgVideo.src = encodeSrc(bgVideos[currentBgIdx]);
+  bgVideo.load();
+  bgVideo.play().catch(function() {});
+});
+
+/* =====================
    DISCORD — LANYARD
    ===================== */
 var DISCORD_ID = '856911460587012116';
@@ -55,12 +113,7 @@ fetch('https://api.lanyard.rest/v1/users/' + DISCORD_ID)
 /* =====================
    VIEWS COUNTER
    ===================== */
-// Uses CountAPI — free, no signup, persists forever
-// Change 'dilsherkrd' + 'pageviews' to any unique namespace/key combo you want
-var COUNT_NAMESPACE = 'dilsherkrd-bio';
-var COUNT_KEY       = 'pageviews';
-
-fetch('https://api.countapi.xyz/hit/' + COUNT_NAMESPACE + '/' + COUNT_KEY)
+fetch('https://api.countapi.xyz/hit/dilsherkrd-bio/pageviews')
   .then(function(r) { return r.json(); })
   .then(function(j) {
     document.getElementById('viewCount').textContent =
@@ -71,55 +124,17 @@ fetch('https://api.countapi.xyz/hit/' + COUNT_NAMESPACE + '/' + COUNT_KEY)
   });
 
 /* =====================
-   BACKGROUND VIDEO
-   ===================== */
-// encodeURIComponent handles the spaces in filenames
-var bgVideos = [
-  'Chief Keef - _Everyday_.mp4',
-  'Chief Keef - Love Sosa.mp4'
-];
-var currentBgIdx = 0;
-var bgVideo = document.getElementById('bgVideo');
-
-function loadBgVideo(idx) {
-  // Use encodeURIComponent on each part but keep the spaces safe for the browser
-  bgVideo.src = bgVideos[idx].split(' ').join('%20');
-  bgVideo.load();
-  bgVideo.play().catch(function() {
-    // Autoplay blocked — will start on first user interaction
-    document.body.addEventListener('click', function tryPlay() {
-      bgVideo.play().catch(function() {});
-      document.body.removeEventListener('click', tryPlay);
-    });
-  });
-}
-
-// Pick a random video on load
-currentBgIdx = Math.floor(Math.random() * bgVideos.length);
-loadBgVideo(currentBgIdx);
-
-document.getElementById('changeVidBtn').addEventListener('click', function() {
-  var next;
-  do {
-    next = Math.floor(Math.random() * bgVideos.length);
-  } while (next === currentBgIdx && bgVideos.length > 1);
-  currentBgIdx = next;
-  loadBgVideo(currentBgIdx);
-});
-
-/* =====================
    MUSIC PLAYER
    ===================== */
 var songs = [
-  { file: "I Don't Like (Remix).mp3",       label: "I Don't Like (Remix)"        },
-  { file: "Roddy Ricch - The Box.mp3",       label: "Roddy Ricch - The Box"       },
-  { file: "Cartoon, Jéja - On & On.mp3",     label: "Cartoon & Jéja - On & On"   },
-  { file: "Ey Reqib.mp3",                    label: "Ey Reqib"                    },
-  { file: "Chief Keef - Love Sosa.mp3",      label: "Chief Keef - Love Sosa"      }
+  { file: "I Don't Like (Remix).mp3",     label: "I Don't Like (Remix)"      },
+  { file: "Roddy Ricch - The Box.mp3",     label: "Roddy Ricch - The Box"     },
+  { file: "Cartoon, Jéja - On & On.mp3",  label: "Cartoon & Jéja - On & On"  },
+  { file: "Ey Reqib.mp3",                  label: "Ey Reqib"                  },
+  { file: "Chief Keef - Love Sosa.mp3",    label: "Chief Keef - Love Sosa"    }
 ];
 
 var idx        = 0;
-var audioEl    = document.getElementById('audio');
 var progress   = document.getElementById('progressBar');
 var playPath   = document.getElementById('playPath');
 var volBar     = document.getElementById('volumeBar');
@@ -137,8 +152,7 @@ function setVolume(v)   { volBar.style.setProperty('--vol', (v * 100) + '%'); }
 
 function loadSong(autoplay) {
   audioEl.pause();
-  // encode spaces in mp3 filenames too
-  audioEl.src = songs[idx].file.split(' ').join('%20');
+  audioEl.src = encodeSrc(songs[idx].file);
   audioEl.load();
   document.getElementById('songTitle').textContent = songs[idx].label;
   document.getElementById('curTime').textContent   = '0:00';
@@ -212,13 +226,3 @@ volBar.oninput = function() {
 
 audioEl.volume = currentVol;
 setVolume(currentVol);
-loadSong(false);
-
-// Start music on first click anywhere (browser autoplay policy)
-document.body.addEventListener('click', function startAudio() {
-  if (audioEl.paused) {
-    audioEl.play().catch(function() {});
-    playPath.setAttribute('d', PAUSE);
-  }
-  document.body.removeEventListener('click', startAudio);
-});
