@@ -1,11 +1,9 @@
 /* =====================
-   BACKGROUND VIDEO FILES — FIXED
-   Uses direct <video src>, like your friend's code.
-   Keep these names EXACTLY the same as the files in your website folder.
+   VIDEO FILES
    ===================== */
 var bgVideoFiles = [
-  './Chief Keef - _Everyday_.mp4',
-  './Sosa.mp4'
+  'Chief Keef - _Everyday_.mp4',
+  'Sosa.mp4'
 ];
 
 var currentBgIdx = Math.floor(Math.random() * bgVideoFiles.length);
@@ -13,32 +11,24 @@ var bgVideo      = document.getElementById('bgVideo');
 var audioEl      = document.getElementById('audio');
 var entered      = false;
 
-function setBgVideo(filename) {
+function playBgVideo(filename) {
   if (!bgVideo) return;
 
   bgVideo.pause();
+  bgVideo.removeAttribute('src');
+  bgVideo.load();
+
+  bgVideo.src = encodeURI(filename);
   bgVideo.muted = true;
   bgVideo.loop = true;
   bgVideo.playsInline = true;
-  bgVideo.preload = 'auto';
-  bgVideo.src = filename;
+  bgVideo.setAttribute('playsinline', '');
+  bgVideo.setAttribute('webkit-playsinline', '');
+
   bgVideo.load();
-}
 
-function playBgVideo(filename) {
-  setBgVideo(filename);
-
-  var playPromise = bgVideo.play();
-  if (playPromise && typeof playPromise.catch === 'function') {
-    playPromise.catch(function(e) {
-      console.warn('Background video play failed:', filename, e);
-    });
-  }
-}
-
-if (bgVideo) {
-  bgVideo.addEventListener('error', function() {
-    console.error('Could not load background video:', bgVideo.currentSrc || bgVideo.src);
+  bgVideo.play().catch(function(e) {
+    console.warn('Background video play error:', e);
   });
 }
 
@@ -52,14 +42,10 @@ splash.addEventListener('click', function() {
   if (entered) return;
   entered = true;
 
-  /* Dismiss splash */
   splash.classList.add('hidden');
   mainScene.classList.add('visible');
 
-  /* Play video inside user gesture — guaranteed to work */
   playBgVideo(bgVideoFiles[currentBgIdx]);
-
-  /* Start music */
   loadSong(true);
 });
 
@@ -153,8 +139,8 @@ var idx        = 0;
 var progress   = document.getElementById('progressBar');
 var playPath   = document.getElementById('playPath');
 var volBar     = document.getElementById('volumeBar');
-var PLAY       = "M8 5v14l11-7z";
-var PAUSE      = "M6 19h4V5H6v14zm8-14v14h4V5h-4z";
+var PLAY       = 'M8 5v14l11-7z';
+var PAUSE      = 'M6 19h4V5H6v14zm8-14v14h4V5h-4z';
 var currentVol = 0.7;
 
 function fmt(t) {
@@ -167,38 +153,24 @@ function setVolume(v)   { volBar.style.setProperty('--vol', (v * 100) + '%'); }
 
 function loadSong(autoplay) {
   audioEl.pause();
-  /* fetch+blob for audio too — same fix */
-  fetch(songs[idx].file)
-    .then(function(r) { return r.blob(); })
-    .then(function(blob) {
-      var url = URL.createObjectURL(blob);
-      audioEl.src = url;
-      audioEl.load();
-      document.getElementById('songTitle').textContent = songs[idx].label;
-      progress.value = 0;
-      setProgress(0);
-      if (autoplay) {
-        audioEl.play().catch(function() {});
-        playPath.setAttribute('d', PAUSE);
-      } else {
-        playPath.setAttribute('d', PLAY);
-      }
-    })
-    .catch(function() {
-      /* fallback: direct src */
-      audioEl.src = songs[idx].file;
-      audioEl.load();
-      document.getElementById('songTitle').textContent = songs[idx].label;
-      if (autoplay) {
-        audioEl.play().catch(function() {});
-        playPath.setAttribute('d', PAUSE);
-      }
-    });
+  audioEl.src = encodeURI(songs[idx].file);
+  audioEl.load();
+
+  document.getElementById('songTitle').textContent = songs[idx].label;
+  progress.value = 0;
+  setProgress(0);
 
   document.getElementById('curTime').textContent   = '0:00';
   document.getElementById('curTime2').textContent  = '0:00';
   document.getElementById('durTime').textContent   = '0:00';
   document.getElementById('durTime2').textContent  = '0:00';
+
+  if (autoplay) {
+    audioEl.play().catch(function(e) { console.warn('Audio play error:', e); });
+    playPath.setAttribute('d', PAUSE);
+  } else {
+    playPath.setAttribute('d', PLAY);
+  }
 }
 
 audioEl.addEventListener('loadedmetadata', function() {
@@ -225,7 +197,7 @@ audioEl.addEventListener('ended', function() {
 
 function playPause() {
   if (audioEl.paused) {
-    audioEl.play().catch(function() {});
+    audioEl.play().catch(function(e) { console.warn('Audio play error:', e); });
     playPath.setAttribute('d', PAUSE);
   } else {
     audioEl.pause();
@@ -258,3 +230,152 @@ volBar.oninput = function() {
 
 audioEl.volume = currentVol;
 setVolume(currentVol);
+
+
+
+/* =====================
+   SPOTIFY-STYLE LRC LYRICS
+   Name your lyric file exactly:
+   dont-like-remix.lrc
+   Put it in the same folder as index.html and script.js.
+   ===================== */
+var lyricsList = document.getElementById('lyricsList');
+var currentLyrics = [];
+var loadedLyricsFor = '';
+
+var lyricsFiles = {
+  "I Don't Like (Remix)": "dont-like-remix.lrc"
+};
+
+function escapeHTML(text) {
+  return String(text).replace(/[&<>"']/g, function(ch) {
+    return ({
+      '&': '&amp;',
+      '<': '&lt;',
+      '>': '&gt;',
+      '"': '&quot;',
+      "'": '&#039;'
+    })[ch];
+  });
+}
+
+function parseTimestampToSeconds(stamp) {
+  var parts = stamp.split(':');
+  if (parts.length < 2) return 0;
+
+  var minutes = parseInt(parts[0], 10) || 0;
+  var seconds = parseFloat(parts[1]) || 0;
+
+  return minutes * 60 + seconds;
+}
+
+function parseLRC(text) {
+  var lines = [];
+  text.split(/\r?\n/).forEach(function(rawLine) {
+    var matches = rawLine.match(/\[(\d{1,2}:\d{2}(?:\.\d{1,3})?)\]/g);
+    if (!matches) return;
+
+    var lyricText = rawLine.replace(/\[(\d{1,2}:\d{2}(?:\.\d{1,3})?)\]/g, '').trim();
+    if (!lyricText) lyricText = '♪';
+
+    matches.forEach(function(stamp) {
+      var cleanStamp = stamp.replace('[', '').replace(']', '');
+      lines.push({
+        time: parseTimestampToSeconds(cleanStamp),
+        text: lyricText
+      });
+    });
+  });
+
+  lines.sort(function(a, b) {
+    return a.time - b.time;
+  });
+
+  return lines;
+}
+
+function loadLyricsForCurrentSong() {
+  var songName = songs[idx].label;
+  var lrcFile = lyricsFiles[songName];
+
+  currentLyrics = [];
+  loadedLyricsFor = songName;
+
+  if (!lyricsList) return;
+
+  if (!lrcFile) {
+    lyricsList.innerHTML = '<div class="lyrics-empty">No lyrics for this song</div>';
+    return;
+  }
+
+  lyricsList.innerHTML = '<div class="lyrics-empty">Loading lyrics...</div>';
+
+  fetch(lrcFile + '?v=' + Date.now())
+    .then(function(response) {
+      if (!response.ok) throw new Error('Could not load ' + lrcFile);
+      return response.text();
+    })
+    .then(function(text) {
+      if (loadedLyricsFor !== songName) return;
+
+      currentLyrics = parseLRC(text);
+
+      if (!currentLyrics.length) {
+        lyricsList.innerHTML = '<div class="lyrics-empty">LRC file has no timed lines</div>';
+        return;
+      }
+
+      renderSpotifyLyrics(0);
+    })
+    .catch(function(error) {
+      console.warn(error);
+      lyricsList.innerHTML = '<div class="lyrics-empty">Add dont-like-remix.lrc to show lyrics</div>';
+    });
+}
+
+function getActiveLyricIndex(currentTime) {
+  if (!currentLyrics.length) return -1;
+
+  var activeIndex = 0;
+
+  for (var i = 0; i < currentLyrics.length; i++) {
+    if (currentTime >= currentLyrics[i].time) {
+      activeIndex = i;
+    } else {
+      break;
+    }
+  }
+
+  return activeIndex;
+}
+
+function renderSpotifyLyrics(currentTime) {
+  if (!lyricsList || !currentLyrics.length) return;
+
+  var activeIndex = getActiveLyricIndex(currentTime);
+  var start = Math.max(0, activeIndex - 2);
+  var end = Math.min(currentLyrics.length, activeIndex + 4);
+  var html = '';
+
+  for (var i = start; i < end; i++) {
+    var cls = 'lyric-line';
+
+    if (i < activeIndex) cls += ' past';
+    if (i === activeIndex) cls += ' active';
+    if (i > activeIndex) cls += ' next';
+
+    html += '<div class="' + cls + '">' + escapeHTML(currentLyrics[i].text) + '</div>';
+  }
+
+  lyricsList.innerHTML = html;
+}
+
+/* Hook lyrics into your existing player */
+audioEl.addEventListener('timeupdate', function() {
+  renderSpotifyLyrics(audioEl.currentTime || 0);
+});
+
+audioEl.addEventListener('seeked', function() {
+  renderSpotifyLyrics(audioEl.currentTime || 0);
+});
+
