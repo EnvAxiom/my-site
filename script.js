@@ -67,9 +67,8 @@ fetch('https://api.lanyard.rest/v1/users/' + DISCORD_ID)
 var songs = [
   { file: "I Don't Like (Remix).mp3",    label: "I Don't Like (Remix)"     },
   { file: "Roddy Ricch - The Box.mp3",   label: "Roddy Ricch - The Box"    },
-  { file: "Cartoon, Jeja - On & On.mp3", label: "Cartoon & Jeja - On & On" },
-  { file: "Ey Reqib.mp3",                label: "Ey Reqib"                 },
   { file: "Chief Keef - Love Sosa.mp3",  label: "Chief Keef - Love Sosa"   },
+  { file: "Ey Reqib.mp3",                label: "Ey Reqib"                 },
   { file: "Chief Keef - _Everyday_.mp4", label: "Chief Keef - Everyday"    }
 ];
 
