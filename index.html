@@ -9,10 +9,13 @@
 </head>
 <body>
 
+<!-- BACKGROUND VIDEO -->
+<video id="bgVideo" autoplay muted loop playsinline></video>
+<div class="bg-overlay"></div>
+
 <div class="scene">
   <div class="wrapper">
 
-    <!-- PROFILE CARD -->
     <div class="card">
       <div class="avatar-wrap">
         <img src="axiom.jpg" alt="avatar"/>
@@ -62,8 +65,7 @@
       </div>
     </div>
 
-    <!-- MUSIC PLAYER (mp3s only) -->
-    <div class="player" id="musicPlayer">
+    <div class="player">
       <audio id="audio"></audio>
       <div class="player-top">
         <div class="track-icon">
@@ -89,17 +91,12 @@
         <input type="range" id="volumeBar" min="0" max="1" step="0.01" value="0.7"/>
         <span class="vol-icon"><svg viewBox="0 0 24 24"><path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM16.5 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z"/></svg></span>
       </div>
-      <!-- button to switch to video -->
-      <div class="switch-row">
-        <button class="switch-btn" id="toVideoBtn">▶ Chief Keef – Everyday (Video)</button>
-      </div>
-    </div>
-
-    <!-- VIDEO PLAYER (mp4 only) -->
-    <div class="player video-player" id="videoPlayer" style="display:none;">
-      <video id="videoEl" controls playsinline style="width:100%;border-radius:10px;display:block;"></video>
-      <div class="switch-row">
-        <button class="switch-btn" id="toMusicBtn">← Back to Music</button>
+      <!-- Change Video button -->
+      <div class="changevid-row">
+        <button class="changevid-btn" id="changeVidBtn">
+          <svg viewBox="0 0 24 24"><path d="M4 6H2v14c0 1.1.9 2 2 2h14v-2H4V6zm16-4H8c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm-8 12.5v-9l6 4.5-6 4.5z"/></svg>
+          Change Video
+        </button>
       </div>
     </div>
 
