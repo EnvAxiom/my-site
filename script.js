@@ -142,7 +142,7 @@ var songs = [
   { file: "I Don't Like (Remix).mp3",    label: "I Don't Like (Remix)"     },
   { file: "Roddy Ricch - The Box.mp3",   label: "Roddy Ricch - The Box"    },
   { file: "Cartoon, Jéja - On & On.mp3", label: "Cartoon & Jéja - On & On" },
-  { file: "Chief Keef - Love Sosa.mp3",  label: "Chief Keef - Love Sosa"   }
+  { file: "Love Sosa.mp3",  label: "Chief Keef - Love Sosa"   }
 ];
 
 var idx        = 0;
