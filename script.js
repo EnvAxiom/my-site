@@ -232,150 +232,159 @@ audioEl.volume = currentVol;
 setVolume(currentVol);
 
 
-
 /* =====================
-   SPOTIFY-STYLE LRC LYRICS
-   Name your lyric file exactly:
-   dont-like-remix.lrc
-   Put it in the same folder as index.html and script.js.
+   SPOTIFY-STYLE LRC LYRICS - FINAL FIX
+   File name must be: dont-like-remix.lrc
    ===================== */
-var lyricsList = document.getElementById('lyricsList');
+
+var lyricsList = document.getElementById("lyricsList");
 var currentLyrics = [];
-var loadedLyricsFor = '';
+var currentLyricsSong = "";
 
 var lyricsFiles = {
   "I Don't Like (Remix)": "dont-like-remix.lrc"
 };
 
-function escapeHTML(text) {
+function htmlSafe(text) {
   return String(text).replace(/[&<>"']/g, function(ch) {
-    return ({
-      '&': '&amp;',
-      '<': '&lt;',
-      '>': '&gt;',
-      '"': '&quot;',
-      "'": '&#039;'
-    })[ch];
+    return {
+      "&": "&amp;",
+      "<": "&lt;",
+      ">": "&gt;",
+      '"': "&quot;",
+      "'": "&#039;"
+    }[ch];
   });
 }
 
-function parseTimestampToSeconds(stamp) {
-  var parts = stamp.split(':');
-  if (parts.length < 2) return 0;
-
+function lrcTimeToSeconds(time) {
+  var parts = time.split(":");
   var minutes = parseInt(parts[0], 10) || 0;
   var seconds = parseFloat(parts[1]) || 0;
-
   return minutes * 60 + seconds;
 }
 
 function parseLRC(text) {
-  var lines = [];
-  text.split(/\r?\n/).forEach(function(rawLine) {
-    var matches = rawLine.match(/\[(\d{1,2}:\d{2}(?:\.\d{1,3})?)\]/g);
-    if (!matches) return;
+  var parsed = [];
 
-    var lyricText = rawLine.replace(/\[(\d{1,2}:\d{2}(?:\.\d{1,3})?)\]/g, '').trim();
-    if (!lyricText) lyricText = '♪';
+  text.split(/\r?\n/).forEach(function(line) {
+    var timeTags = line.match(/\[(\d{1,2}:\d{2}(?:\.\d{1,3})?)\]/g);
+    if (!timeTags) return;
 
-    matches.forEach(function(stamp) {
-      var cleanStamp = stamp.replace('[', '').replace(']', '');
-      lines.push({
-        time: parseTimestampToSeconds(cleanStamp),
+    var lyricText = line.replace(/\[(\d{1,2}:\d{2}(?:\.\d{1,3})?)\]/g, "").trim();
+    if (!lyricText) lyricText = "♪";
+
+    timeTags.forEach(function(tag) {
+      parsed.push({
+        time: lrcTimeToSeconds(tag.slice(1, -1)),
         text: lyricText
       });
     });
   });
 
-  lines.sort(function(a, b) {
+  parsed.sort(function(a, b) {
     return a.time - b.time;
   });
 
-  return lines;
+  return parsed;
 }
 
-function loadLyricsForCurrentSong() {
-  var songName = songs[idx].label;
-  var lrcFile = lyricsFiles[songName];
+function setLyricsMessage(message) {
+  if (!lyricsList) return;
+  lyricsList.innerHTML = '<div class="lyrics-empty">' + htmlSafe(message) + '</div>';
+}
 
-  currentLyrics = [];
-  loadedLyricsFor = songName;
-
+function loadLyricsForSong(songLabel) {
   if (!lyricsList) return;
 
-  if (!lrcFile) {
-    lyricsList.innerHTML = '<div class="lyrics-empty">No lyrics for this song</div>';
+  currentLyrics = [];
+  currentLyricsSong = songLabel;
+
+  var file = lyricsFiles[songLabel];
+
+  if (!file) {
+    setLyricsMessage("NO LYRICS");
     return;
   }
 
-  lyricsList.innerHTML = '<div class="lyrics-empty">Loading lyrics...</div>';
+  setLyricsMessage("Loading lyrics...");
 
-  fetch(lrcFile + '?v=' + Date.now())
+  fetch(file + "?cache=" + Date.now())
     .then(function(response) {
-      if (!response.ok) throw new Error('Could not load ' + lrcFile);
+      if (!response.ok) throw new Error("LRC not found");
       return response.text();
     })
     .then(function(text) {
-      if (loadedLyricsFor !== songName) return;
+      if (currentLyricsSong !== songLabel) return;
 
       currentLyrics = parseLRC(text);
 
       if (!currentLyrics.length) {
-        lyricsList.innerHTML = '<div class="lyrics-empty">LRC file has no timed lines</div>';
+        setLyricsMessage("NO TIMED LYRICS FOUND");
         return;
       }
 
-      renderSpotifyLyrics(0);
+      renderLyrics(audioEl.currentTime || 0);
     })
     .catch(function(error) {
-      console.warn(error);
-      lyricsList.innerHTML = '<div class="lyrics-empty">Add dont-like-remix.lrc to show lyrics</div>';
+      console.warn("Lyrics failed:", error);
+      setLyricsMessage("LYRICS FILE NOT LOADED");
     });
 }
 
-function getActiveLyricIndex(currentTime) {
-  if (!currentLyrics.length) return -1;
-
-  var activeIndex = 0;
+function getCurrentLyricIndex(time) {
+  var active = 0;
 
   for (var i = 0; i < currentLyrics.length; i++) {
-    if (currentTime >= currentLyrics[i].time) {
-      activeIndex = i;
-    } else {
-      break;
-    }
+    if (time >= currentLyrics[i].time) active = i;
+    else break;
   }
 
-  return activeIndex;
+  return active;
 }
 
-function renderSpotifyLyrics(currentTime) {
+function renderLyrics(time) {
   if (!lyricsList || !currentLyrics.length) return;
 
-  var activeIndex = getActiveLyricIndex(currentTime);
-  var start = Math.max(0, activeIndex - 2);
-  var end = Math.min(currentLyrics.length, activeIndex + 4);
-  var html = '';
+  var active = getCurrentLyricIndex(time);
+  var start = Math.max(0, active - 2);
+  var end = Math.min(currentLyrics.length, active + 4);
+  var output = "";
 
   for (var i = start; i < end; i++) {
-    var cls = 'lyric-line';
+    var className = "lyric-line";
 
-    if (i < activeIndex) cls += ' past';
-    if (i === activeIndex) cls += ' active';
-    if (i > activeIndex) cls += ' next';
+    if (i < active) className += " past";
+    if (i === active) className += " active";
+    if (i > active) className += " next";
 
-    html += '<div class="' + cls + '">' + escapeHTML(currentLyrics[i].text) + '</div>';
+    output += '<div class="' + className + '">' + htmlSafe(currentLyrics[i].text) + "</div>";
   }
 
-  lyricsList.innerHTML = html;
+  lyricsList.innerHTML = output;
 }
 
-/* Hook lyrics into your existing player */
-audioEl.addEventListener('timeupdate', function() {
-  renderSpotifyLyrics(audioEl.currentTime || 0);
+function refreshLyricsForCurrentSong() {
+  if (!songs || !songs[idx]) return;
+  loadLyricsForSong(songs[idx].label);
+}
+
+audioEl.addEventListener("timeupdate", function() {
+  renderLyrics(audioEl.currentTime || 0);
 });
 
-audioEl.addEventListener('seeked', function() {
-  renderSpotifyLyrics(audioEl.currentTime || 0);
+audioEl.addEventListener("seeked", function() {
+  renderLyrics(audioEl.currentTime || 0);
 });
+
+audioEl.addEventListener("loadedmetadata", function() {
+  refreshLyricsForCurrentSong();
+});
+
+/* Force lyrics to load when player changes songs */
+var originalLoadSong = loadSong;
+loadSong = function(autoplay) {
+  originalLoadSong(autoplay);
+  setTimeout(refreshLyricsForCurrentSong, 50);
+};
 
