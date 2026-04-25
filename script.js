@@ -59,7 +59,6 @@ var songs = [
   { file: "I Don't Like (Remix).mp3",         label: "I Don't Like (Remix)"          },
   { file: "Roddy Ricch - The Box.mp3",         label: "Roddy Ricch - The Box"         },
   { file: "Cartoon, J\u00e9ja - On & On.mp3", label: "Cartoon & J\u00e9ja - On & On" },
-  { file: "Ey Reqib.mp3",                      label: "Ey Reqib"                      },
   { file: "Chief Keef - Love Sosa.mp3",        label: "Chief Keef - Love Sosa"        },
   { file: "Chief Keef - _Everyday_.mp4",       label: "Chief Keef - Everyday"         }
 ];
