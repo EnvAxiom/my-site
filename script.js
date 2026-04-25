@@ -1,9 +1,11 @@
 /* =====================
-   VIDEO FILES
+   BACKGROUND VIDEO FILES — FIXED
+   Uses direct <video src>, like your friend's code.
+   Keep these names EXACTLY the same as the files in your website folder.
    ===================== */
 var bgVideoFiles = [
-  'Chief Keef - _Everyday_.mp4',
-  'Sosa.mp4'
+  './Chief Keef - _Everyday_.mp4',
+  './Sosa.mp4'
 ];
 
 var currentBgIdx = Math.floor(Math.random() * bgVideoFiles.length);
@@ -11,24 +13,32 @@ var bgVideo      = document.getElementById('bgVideo');
 var audioEl      = document.getElementById('audio');
 var entered      = false;
 
-function playBgVideo(filename) {
+function setBgVideo(filename) {
   if (!bgVideo) return;
 
   bgVideo.pause();
-  bgVideo.removeAttribute('src');
-  bgVideo.load();
-
-  bgVideo.src = encodeURI(filename);
   bgVideo.muted = true;
   bgVideo.loop = true;
   bgVideo.playsInline = true;
-  bgVideo.setAttribute('playsinline', '');
-  bgVideo.setAttribute('webkit-playsinline', '');
-
+  bgVideo.preload = 'auto';
+  bgVideo.src = filename;
   bgVideo.load();
+}
 
-  bgVideo.play().catch(function(e) {
-    console.warn('Background video play error:', e);
+function playBgVideo(filename) {
+  setBgVideo(filename);
+
+  var playPromise = bgVideo.play();
+  if (playPromise && typeof playPromise.catch === 'function') {
+    playPromise.catch(function(e) {
+      console.warn('Background video play failed:', filename, e);
+    });
+  }
+}
+
+if (bgVideo) {
+  bgVideo.addEventListener('error', function() {
+    console.error('Could not load background video:', bgVideo.currentSrc || bgVideo.src);
   });
 }
 
@@ -42,10 +52,14 @@ splash.addEventListener('click', function() {
   if (entered) return;
   entered = true;
 
+  /* Dismiss splash */
   splash.classList.add('hidden');
   mainScene.classList.add('visible');
 
+  /* Play video inside user gesture — guaranteed to work */
   playBgVideo(bgVideoFiles[currentBgIdx]);
+
+  /* Start music */
   loadSong(true);
 });
 
@@ -139,8 +153,8 @@ var idx        = 0;
 var progress   = document.getElementById('progressBar');
 var playPath   = document.getElementById('playPath');
 var volBar     = document.getElementById('volumeBar');
-var PLAY       = 'M8 5v14l11-7z';
-var PAUSE      = 'M6 19h4V5H6v14zm8-14v14h4V5h-4z';
+var PLAY       = "M8 5v14l11-7z";
+var PAUSE      = "M6 19h4V5H6v14zm8-14v14h4V5h-4z";
 var currentVol = 0.7;
 
 function fmt(t) {
@@ -153,24 +167,38 @@ function setVolume(v)   { volBar.style.setProperty('--vol', (v * 100) + '%'); }
 
 function loadSong(autoplay) {
   audioEl.pause();
-  audioEl.src = encodeURI(songs[idx].file);
-  audioEl.load();
-
-  document.getElementById('songTitle').textContent = songs[idx].label;
-  progress.value = 0;
-  setProgress(0);
+  /* fetch+blob for audio too — same fix */
+  fetch(songs[idx].file)
+    .then(function(r) { return r.blob(); })
+    .then(function(blob) {
+      var url = URL.createObjectURL(blob);
+      audioEl.src = url;
+      audioEl.load();
+      document.getElementById('songTitle').textContent = songs[idx].label;
+      progress.value = 0;
+      setProgress(0);
+      if (autoplay) {
+        audioEl.play().catch(function() {});
+        playPath.setAttribute('d', PAUSE);
+      } else {
+        playPath.setAttribute('d', PLAY);
+      }
+    })
+    .catch(function() {
+      /* fallback: direct src */
+      audioEl.src = songs[idx].file;
+      audioEl.load();
+      document.getElementById('songTitle').textContent = songs[idx].label;
+      if (autoplay) {
+        audioEl.play().catch(function() {});
+        playPath.setAttribute('d', PAUSE);
+      }
+    });
 
   document.getElementById('curTime').textContent   = '0:00';
   document.getElementById('curTime2').textContent  = '0:00';
   document.getElementById('durTime').textContent   = '0:00';
   document.getElementById('durTime2').textContent  = '0:00';
-
-  if (autoplay) {
-    audioEl.play().catch(function(e) { console.warn('Audio play error:', e); });
-    playPath.setAttribute('d', PAUSE);
-  } else {
-    playPath.setAttribute('d', PLAY);
-  }
 }
 
 audioEl.addEventListener('loadedmetadata', function() {
@@ -197,7 +225,7 @@ audioEl.addEventListener('ended', function() {
 
 function playPause() {
   if (audioEl.paused) {
-    audioEl.play().catch(function(e) { console.warn('Audio play error:', e); });
+    audioEl.play().catch(function() {});
     playPath.setAttribute('d', PAUSE);
   } else {
     audioEl.pause();
