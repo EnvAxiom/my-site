@@ -59,6 +59,7 @@ var songs = [
   { file: "I Don't Like (Remix).mp3",         label: "I Don't Like (Remix)"          },
   { file: "Roddy Ricch - The Box.mp3",         label: "Roddy Ricch - The Box"         },
   { file: "Cartoon, J\u00e9ja - On & On.mp3", label: "Cartoon & J\u00e9ja - On & On" },
+  { file: "Ey Reqib.mp3",                      label: "Ey Reqib"                      },
   { file: "Chief Keef - Love Sosa.mp3",        label: "Chief Keef - Love Sosa"        },
   { file: "Chief Keef - _Everyday_.mp4",       label: "Chief Keef - Everyday"         }
 ];
@@ -71,15 +72,9 @@ var PLAY       = "M8 5v14l11-7z";
 var PAUSE      = "M6 19h4V5H6v14zm8-14v14h4V5h-4z";
 var currentVol = 0.7;
 
-/* ── keep the existing <audio> tag, create a hidden <video> ── */
+/* Both elements are declared in index.html */
 var audioEl = document.getElementById('audio');
-
-var videoEl = document.createElement('video');
-videoEl.setAttribute('playsinline', '');
-videoEl.setAttribute('webkit-playsinline', '');
-videoEl.style.cssText = 'position:fixed;top:-9999px;left:-9999px;width:1px;height:1px;opacity:0;pointer-events:none;';
-videoEl.muted = false;
-document.body.appendChild(videoEl);
+var videoEl = document.getElementById('video');
 
 function isMP4() { return songs[idx].file.slice(-4).toLowerCase() === '.mp4'; }
 function activeEl() { return isMP4() ? videoEl : audioEl; }
@@ -93,8 +88,10 @@ function setProgress(v) { progress.style.setProperty('--prog', v + '%'); }
 function setVolume(v)   { volBar.style.setProperty('--vol', (v * 100) + '%'); }
 
 function resetDisplay() {
-  ['curTime','curTime2'].forEach(function(id){ document.getElementById(id).textContent = '0:00'; });
-  ['durTime','durTime2'].forEach(function(id){ document.getElementById(id).textContent = '0:00'; });
+  document.getElementById('curTime').textContent  = '0:00';
+  document.getElementById('curTime2').textContent = '0:00';
+  document.getElementById('durTime').textContent  = '0:00';
+  document.getElementById('durTime2').textContent = '0:00';
   progress.value = 0;
   setProgress(0);
 }
@@ -113,24 +110,20 @@ function loadSong(autoplay) {
   stopAll();
   var song = songs[idx];
   document.getElementById('songTitle').textContent = song.label;
-
   var el = activeEl();
   el.volume = currentVol;
   el.src = song.file;
   el.load();
-
   if (autoplay) {
-    /* some browsers need a tiny delay after .load() before .play() */
     setTimeout(function() {
-      el.play().catch(function(err){ console.warn('play blocked:', err); });
-    }, 50);
+      el.play().catch(function(err) { console.warn('play blocked:', err); });
+    }, 80);
     playPath.setAttribute('d', PAUSE);
   } else {
     playPath.setAttribute('d', PLAY);
   }
 }
 
-/* ── shared event wiring ── */
 [audioEl, videoEl].forEach(function(el) {
   el.addEventListener('loadedmetadata', function() {
     if (el !== activeEl()) return;
@@ -154,11 +147,10 @@ function loadSong(autoplay) {
   el.addEventListener('ended', nextSong);
 });
 
-/* ── controls ── */
 function playPause() {
   var el = activeEl();
   if (el.paused) {
-    el.play().catch(function(){});
+    el.play().catch(function() {});
     playPath.setAttribute('d', PAUSE);
   } else {
     el.pause();
@@ -195,17 +187,15 @@ volBar.oninput = function() {
   setVolume(currentVol);
 };
 
-/* ── init ── */
 audioEl.volume = currentVol;
 videoEl.volume = currentVol;
 setVolume(currentVol);
 loadSong(false);
 
-/* mobile / autoplay-policy unlock on first tap */
 document.body.addEventListener('click', function() {
   var el = activeEl();
   if (el.paused) {
-    el.play().catch(function(){});
+    el.play().catch(function() {});
     playPath.setAttribute('d', PAUSE);
   }
 }, { once: true });
