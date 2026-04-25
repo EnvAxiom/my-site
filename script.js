@@ -3,13 +3,10 @@
    The fetch+blob approach bypasses ALL filename/space/encoding issues.
    The browser loads the raw bytes and plays from a local blob URL.
    ===================== */
-function playBgVideo(filename) {
-  bgVideo.src = filename;
-  bgVideo.load();
-  bgVideo.play().catch(function(e) {
-    console.warn('video play err:', e);
-  });
-}
+var bgVideoFiles = [
+  'Chief Keef - _Everyday_.mp4',
+  'Sosa.mp4'
+];
 var currentBgIdx = Math.floor(Math.random() * bgVideoFiles.length);
 var bgVideo      = document.getElementById('bgVideo');
 var audioEl      = document.getElementById('audio');
