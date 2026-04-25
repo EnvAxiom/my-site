@@ -53,8 +53,27 @@ fetch('https://api.lanyard.rest/v1/users/' + DISCORD_ID)
 })();
 
 /* =====================
+   VIEWS COUNTER
+   ===================== */
+// Uses CountAPI — free, no signup, persists forever
+// Change 'dilsherkrd' + 'pageviews' to any unique namespace/key combo you want
+var COUNT_NAMESPACE = 'dilsherkrd-bio';
+var COUNT_KEY       = 'pageviews';
+
+fetch('https://api.countapi.xyz/hit/' + COUNT_NAMESPACE + '/' + COUNT_KEY)
+  .then(function(r) { return r.json(); })
+  .then(function(j) {
+    document.getElementById('viewCount').textContent =
+      j.value !== undefined ? j.value.toLocaleString() : '—';
+  })
+  .catch(function() {
+    document.getElementById('viewCount').textContent = '—';
+  });
+
+/* =====================
    BACKGROUND VIDEO
    ===================== */
+// encodeURIComponent handles the spaces in filenames
 var bgVideos = [
   'Chief Keef - _Everyday_.mp4',
   'Chief Keef - Love Sosa.mp4'
@@ -63,32 +82,40 @@ var currentBgIdx = 0;
 var bgVideo = document.getElementById('bgVideo');
 
 function loadBgVideo(idx) {
-  bgVideo.src = bgVideos[idx];
+  // Use encodeURIComponent on each part but keep the spaces safe for the browser
+  bgVideo.src = bgVideos[idx].split(' ').join('%20');
   bgVideo.load();
-  bgVideo.play().catch(function() {});
+  bgVideo.play().catch(function() {
+    // Autoplay blocked — will start on first user interaction
+    document.body.addEventListener('click', function tryPlay() {
+      bgVideo.play().catch(function() {});
+      document.body.removeEventListener('click', tryPlay);
+    });
+  });
 }
 
-/* pick a random one on load */
+// Pick a random video on load
 currentBgIdx = Math.floor(Math.random() * bgVideos.length);
 loadBgVideo(currentBgIdx);
 
 document.getElementById('changeVidBtn').addEventListener('click', function() {
-  /* pick a different random video (never the same one) */
   var next;
-  do { next = Math.floor(Math.random() * bgVideos.length); } while (next === currentBgIdx && bgVideos.length > 1);
+  do {
+    next = Math.floor(Math.random() * bgVideos.length);
+  } while (next === currentBgIdx && bgVideos.length > 1);
   currentBgIdx = next;
   loadBgVideo(currentBgIdx);
 });
 
 /* =====================
-   MUSIC PLAYER (mp3s only)
+   MUSIC PLAYER
    ===================== */
 var songs = [
-  { file: "I Don't Like (Remix).mp3",         label: "I Don't Like (Remix)"          },
-  { file: "Roddy Ricch - The Box.mp3",         label: "Roddy Ricch - The Box"         },
-  { file: "Cartoon, J\u00e9ja - On & On.mp3", label: "Cartoon & J\u00e9ja - On & On" },
-  { file: "Ey Reqib.mp3",                      label: "Ey Reqib"                      },
-  { file: "Chief Keef - Love Sosa.mp3",        label: "Chief Keef - Love Sosa"        }
+  { file: "I Don't Like (Remix).mp3",       label: "I Don't Like (Remix)"        },
+  { file: "Roddy Ricch - The Box.mp3",       label: "Roddy Ricch - The Box"       },
+  { file: "Cartoon, Jéja - On & On.mp3",     label: "Cartoon & Jéja - On & On"   },
+  { file: "Ey Reqib.mp3",                    label: "Ey Reqib"                    },
+  { file: "Chief Keef - Love Sosa.mp3",      label: "Chief Keef - Love Sosa"      }
 ];
 
 var idx        = 0;
@@ -110,7 +137,8 @@ function setVolume(v)   { volBar.style.setProperty('--vol', (v * 100) + '%'); }
 
 function loadSong(autoplay) {
   audioEl.pause();
-  audioEl.src = songs[idx].file;
+  // encode spaces in mp3 filenames too
+  audioEl.src = songs[idx].file.split(' ').join('%20');
   audioEl.load();
   document.getElementById('songTitle').textContent = songs[idx].label;
   document.getElementById('curTime').textContent   = '0:00';
@@ -186,9 +214,11 @@ audioEl.volume = currentVol;
 setVolume(currentVol);
 loadSong(false);
 
-document.body.addEventListener('click', function() {
+// Start music on first click anywhere (browser autoplay policy)
+document.body.addEventListener('click', function startAudio() {
   if (audioEl.paused) {
     audioEl.play().catch(function() {});
     playPath.setAttribute('d', PAUSE);
   }
-}, { once: true });
+  document.body.removeEventListener('click', startAudio);
+});
