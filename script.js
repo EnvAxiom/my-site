@@ -1,59 +1,62 @@
 /* =====================
-   SPLASH SCREEN — enters on click,
-   which also unlocks browser autoplay
+   VIDEO FILES
+   The fetch+blob approach bypasses ALL filename/space/encoding issues.
+   The browser loads the raw bytes and plays from a local blob URL.
    ===================== */
-var splash     = document.getElementById('splash');
-var mainScene  = document.getElementById('mainScene');
-var bgVideo    = document.getElementById('bgVideo');
-var audioEl    = document.getElementById('audio');
-var entered    = false;
-
-/* Pre-load the video src so it's ready */
-var bgVideos = [
+var bgVideoFiles = [
   'Chief Keef - _Everyday_.mp4',
   'Chief Keef - Love Sosa.mp4'
 ];
-var currentBgIdx = Math.floor(Math.random() * bgVideos.length);
+var currentBgIdx = Math.floor(Math.random() * bgVideoFiles.length);
+var bgVideo      = document.getElementById('bgVideo');
+var audioEl      = document.getElementById('audio');
+var entered      = false;
 
-function encodeSrc(filename) {
-  return filename.split(' ').join('%20');
+function playBgVideo(filename) {
+  fetch(filename)
+    .then(function(r) {
+      if (!r.ok) throw new Error('fetch failed: ' + r.status);
+      return r.blob();
+    })
+    .then(function(blob) {
+      var url = URL.createObjectURL(blob);
+      bgVideo.src = url;
+      bgVideo.load();
+      bgVideo.play().catch(function(e) { console.warn('video play err:', e); });
+    })
+    .catch(function(e) {
+      console.error('Could not load video:', filename, e);
+    });
 }
 
-/* Set src immediately so it starts buffering */
-bgVideo.src = encodeSrc(bgVideos[currentBgIdx]);
-bgVideo.load();
+/* =====================
+   SPLASH SCREEN
+   ===================== */
+var splash    = document.getElementById('splash');
+var mainScene = document.getElementById('mainScene');
 
 splash.addEventListener('click', function() {
   if (entered) return;
   entered = true;
 
-  /* Fade out splash */
+  /* Dismiss splash */
   splash.classList.add('hidden');
+  mainScene.classList.add('visible');
 
-  /* Play video — this is inside a user gesture so it WILL work */
-  bgVideo.play().catch(function(e) { console.warn('video play failed:', e); });
+  /* Play video inside user gesture — guaranteed to work */
+  playBgVideo(bgVideoFiles[currentBgIdx]);
 
   /* Start music */
-  loadSong(false);
-  audioEl.play().catch(function() {});
-  playPath.setAttribute('d', PAUSE);
-
-  /* Fade in main content */
-  mainScene.classList.add('visible');
+  loadSong(true);
 });
 
-/* =====================
-   CHANGE VIDEO BUTTON
-   ===================== */
+/* Change video button */
 document.getElementById('changeVidBtn').addEventListener('click', function() {
   var next;
-  do {
-    next = Math.floor(Math.random() * bgVideos.length);
-  } while (next === currentBgIdx && bgVideos.length > 1);
+  do { next = Math.floor(Math.random() * bgVideoFiles.length); }
+  while (next === currentBgIdx && bgVideoFiles.length > 1);
   currentBgIdx = next;
-  bgVideo.src = encodeSrc(bgVideos[currentBgIdx]);
-  bgVideo.load();
-  bgVideo.play().catch(function() {});
+  playBgVideo(bgVideoFiles[currentBgIdx]);
 });
 
 /* =====================
@@ -127,11 +130,11 @@ fetch('https://api.countapi.xyz/hit/dilsherkrd-bio/pageviews')
    MUSIC PLAYER
    ===================== */
 var songs = [
-  { file: "I Don't Like (Remix).mp3",     label: "I Don't Like (Remix)"      },
-  { file: "Roddy Ricch - The Box.mp3",     label: "Roddy Ricch - The Box"     },
-  { file: "Cartoon, Jéja - On & On.mp3",  label: "Cartoon & Jéja - On & On"  },
-  { file: "Ey Reqib.mp3",                  label: "Ey Reqib"                  },
-  { file: "Chief Keef - Love Sosa.mp3",    label: "Chief Keef - Love Sosa"    }
+  { file: "I Don't Like (Remix).mp3",    label: "I Don't Like (Remix)"     },
+  { file: "Roddy Ricch - The Box.mp3",   label: "Roddy Ricch - The Box"    },
+  { file: "Cartoon, Jéja - On & On.mp3", label: "Cartoon & Jéja - On & On" },
+  { file: "Ey Reqib.mp3",                label: "Ey Reqib"                  },
+  { file: "Chief Keef - Love Sosa.mp3",  label: "Chief Keef - Love Sosa"   }
 ];
 
 var idx        = 0;
@@ -152,21 +155,38 @@ function setVolume(v)   { volBar.style.setProperty('--vol', (v * 100) + '%'); }
 
 function loadSong(autoplay) {
   audioEl.pause();
-  audioEl.src = encodeSrc(songs[idx].file);
-  audioEl.load();
-  document.getElementById('songTitle').textContent = songs[idx].label;
+  /* fetch+blob for audio too — same fix */
+  fetch(songs[idx].file)
+    .then(function(r) { return r.blob(); })
+    .then(function(blob) {
+      var url = URL.createObjectURL(blob);
+      audioEl.src = url;
+      audioEl.load();
+      document.getElementById('songTitle').textContent = songs[idx].label;
+      progress.value = 0;
+      setProgress(0);
+      if (autoplay) {
+        audioEl.play().catch(function() {});
+        playPath.setAttribute('d', PAUSE);
+      } else {
+        playPath.setAttribute('d', PLAY);
+      }
+    })
+    .catch(function() {
+      /* fallback: direct src */
+      audioEl.src = songs[idx].file;
+      audioEl.load();
+      document.getElementById('songTitle').textContent = songs[idx].label;
+      if (autoplay) {
+        audioEl.play().catch(function() {});
+        playPath.setAttribute('d', PAUSE);
+      }
+    });
+
   document.getElementById('curTime').textContent   = '0:00';
   document.getElementById('curTime2').textContent  = '0:00';
   document.getElementById('durTime').textContent   = '0:00';
   document.getElementById('durTime2').textContent  = '0:00';
-  progress.value = 0;
-  setProgress(0);
-  if (autoplay) {
-    audioEl.play().catch(function() {});
-    playPath.setAttribute('d', PAUSE);
-  } else {
-    playPath.setAttribute('d', PLAY);
-  }
 }
 
 audioEl.addEventListener('loadedmetadata', function() {
