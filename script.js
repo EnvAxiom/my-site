@@ -71,7 +71,7 @@ if (changeVidBtn) changeVidBtn.addEventListener('click', function() {
 /* =====================
    DISCORD — LANYARD
    ===================== */
-var DISCORD_ID = '856911460587012116';
+var DISCORD_ID = '243019093274394624';
 
 function applyStatus(d) {
   var dot    = document.getElementById('statusDot');
